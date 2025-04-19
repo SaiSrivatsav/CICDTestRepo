@@ -11,11 +11,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1) Check out the repo so we can scan its folders
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 2) Fetch OAuth2 access token
       - name: Fetch OAuth2 access token
         id: auth
         run: |
@@ -26,14 +24,13 @@ jobs:
           token=$(echo "$response" | jq -r .access_token)
           echo "ACCESS_TOKEN=$token" >> $GITHUB_ENV
 
-      # 3) Find the single .mtar file under any mta_archives folder
-      - name: Find MTAR file path
+      - name: Find MTAR file path (if any)
         id: find-mtar
         run: |
-          MTAR_FILE_PATH=$(find . -type f -path "*/mta_archives/*.mtar" | head -n1)
+          # try to locate the single .mtar under mta_archives, or fallback to empty
+          MTAR_FILE_PATH=$(find . -type f -path "*/mta_archives/*.mtar" | head -n1 || echo "")
           echo "MTAR_FILE_PATH=$MTAR_FILE_PATH" >> $GITHUB_ENV
 
-      # 4) Call CAPM endpoint, including the new mtar_file_path field
       - name: Call CAPM endpoint with full GitHub context
         run: |
           curl -X POST https://c6f5b46ctrial-dev-codesail-srv.cfapps.us10-001.hana.ondemand.com/trigger \
