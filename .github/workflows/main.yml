@@ -11,6 +11,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1) Check out the repo so we can scan its folders
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # 2) Fetch OAuth2 access token
       - name: Fetch OAuth2 access token
         id: auth
         run: |
@@ -21,16 +26,24 @@ jobs:
           token=$(echo "$response" | jq -r .access_token)
           echo "ACCESS_TOKEN=$token" >> $GITHUB_ENV
 
+      # 3) Find the single .mtar file under any mta_archives folder
+      - name: Find MTAR file path
+        id: find-mtar
+        run: |
+          MTAR_FILE_PATH=$(find . -type f -path "*/mta_archives/*.mtar" | head -n1)
+          echo "MTAR_FILE_PATH=$MTAR_FILE_PATH" >> $GITHUB_ENV
+
+      # 4) Call CAPM endpoint, including the new mtar_file_path field
       - name: Call CAPM endpoint with full GitHub context
         run: |
           curl -X POST https://c6f5b46ctrial-dev-codesail-srv.cfapps.us10-001.hana.ondemand.com/trigger \
             -H "Content-Type: application/json" \
             -H "Authorization: Bearer $ACCESS_TOKEN" \
             -d '{
-              "ref":        "'"${{ github.ref }}"'",
-              "sha":        "'"${{ github.sha }}"'",
-              "actor":      "'"${{ github.actor }}"'",
-              "pusher":     {
+              "ref":             "'"${{ github.ref }}"'",
+              "sha":             "'"${{ github.sha }}"'",
+              "actor":           "'"${{ github.actor }}"'",
+              "pusher": {
                 "name":  "'"${{ github.event.pusher.name }}"'",
                 "email": "'"${{ github.event.pusher.email }}"'"
               },
@@ -44,5 +57,6 @@ jobs:
                 "name":      "'"${{ github.event.repository.name }}"'",
                 "full_name": "'"${{ github.event.repository.full_name }}"'",
                 "url":       "'"${{ github.event.repository.html_url }}"'"
-              }
+              },
+              "mtar_file_path":  "'"$MTAR_FILE_PATH"'"
             }'
