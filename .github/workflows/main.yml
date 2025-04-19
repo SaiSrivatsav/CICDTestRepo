@@ -1,9 +1,10 @@
-# .github/workflows/main.yml
+# .github/workflows/notify-capm.yml
 name: Notify CAPM Service on Push
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
   notify-push-op:
@@ -21,28 +22,10 @@ jobs:
           echo "ACCESS_TOKEN=$token" >> $GITHUB_ENV
 
       - name: Call CAPM endpoint with full GitHub context
+        env:
+          PAYLOAD: ${{ toJson({ref:github.ref,sha:github.sha,actor:github.actor,pusher:{name:github.event.pusher.name,email:github.event.pusher.email},head_commit:{id:github.event.head_commit.id,timestamp:github.event.head_commit.timestamp,message:github.event.head_commit.message,url:github.event.head_commit.url},commits:github.event.commits,repository:{name:github.event.repository.name,full_name:github.event.repository.full_name,url:github.event.repository.html_url}}) }}
         run: |
           curl -X POST https://c6f5b46ctrial-dev-codesail-srv.cfapps.us10-001.hana.ondemand.com/trigger \
             -H "Content-Type: application/json" \
             -H "Authorization: Bearer $ACCESS_TOKEN" \
-            -d '${{ toJson({
-                  ref:           github.ref,
-                  sha:           github.sha,
-                  actor:         github.actor,
-                  pusher: {
-                    name:  github.event.pusher.name,
-                    email: github.event.pusher.email
-                  },
-                  head_commit: {
-                    id:        github.event.head_commit.id,
-                    timestamp: github.event.head_commit.timestamp,
-                    message:   github.event.head_commit.message,
-                    url:       github.event.head_commit.url
-                  },
-                  commits:    github.event.commits,
-                  repository: {
-                    name:      github.event.repository.name,
-                    full_name: github.event.repository.full_name,
-                    url:       github.event.repository.html_url
-                  }
-                }) }}'
+            -d "$PAYLOAD"
