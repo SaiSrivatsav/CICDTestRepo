@@ -1,0 +1,29 @@
+# .github/workflows/notify-capm.yml
+name: Notify CAPM Service on Push
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  trigger-capm:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Fetch OAuth2 access token
+        id: auth
+        run: |
+          response=$(curl -s -X POST \
+            -u "${{ secrets.OAUTH_CLIENT_ID }}:${{ secrets.OAUTH_CLIENT_SECRET }}" \
+            -d "grant_type=client_credentials" \
+            "${{ secrets.OAUTH_TOKEN_URL }}")
+          # extract JSON .access_token
+          token=$(echo "$response" | jq -r .access_token)
+          echo "ACCESS_TOKEN=$token" >> $GITHUB_ENV
+
+      - name: Call CAPM endpoint with Bearer token
+        run: |
+          curl -X POST https://your‑capm-service.example.com/trigger \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $ACCESS_TOKEN" \
+            -d '{"ref":"'"${{ github.ref }}"'","sha":"'"${{ github.sha }}"'"}'
