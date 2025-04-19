@@ -23,7 +23,7 @@ jobs:
 
       - name: Call CAPM endpoint with Bearer token
         run: |
-          curl -X POST https://your‑capm-service.example.com/trigger \
+          curl -X POST https://c6f5b46ctrial-dev-codesail-srv.cfapps.us10-001.hana.ondemand.com/codesail/PipelineArtifacts \
             -H "Content-Type: application/json" \
             -H "Authorization: Bearer $ACCESS_TOKEN" \
             -d '{"ref":"'"${{ github.ref }}"'","sha":"'"${{ github.sha }}"'"}'
