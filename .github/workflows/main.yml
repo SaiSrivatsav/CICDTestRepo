@@ -1,4 +1,4 @@
-# .github/workflows/notify-capm.yml
+# .github/workflows/main.yml
 name: Notify CAPM Service on Push
 
 on:
@@ -17,7 +17,6 @@ jobs:
             -u "${{ secrets.OAUTH_CLIENT_ID }}:${{ secrets.OAUTH_CLIENT_SECRET }}" \
             -d "grant_type=client_credentials" \
             "${{ secrets.OAUTH_TOKEN_URL }}")
-          # extract JSON .access_token
           token=$(echo "$response" | jq -r .access_token)
           echo "ACCESS_TOKEN=$token" >> $GITHUB_ENV
 
@@ -26,10 +25,10 @@ jobs:
           curl -X POST https://c6f5b46ctrial-dev-codesail-srv.cfapps.us10-001.hana.ondemand.com/trigger \
             -H "Content-Type: application/json" \
             -H "Authorization: Bearer $ACCESS_TOKEN" \
-            -d "${{ toJson({
-                  ref:        github.ref,
-                  sha:        github.sha,
-                  actor:      github.actor,
+            -d '${{ toJson({
+                  ref:           github.ref,
+                  sha:           github.sha,
+                  actor:         github.actor,
                   pusher: {
                     name:  github.event.pusher.name,
                     email: github.event.pusher.email
@@ -46,4 +45,4 @@ jobs:
                     full_name: github.event.repository.full_name,
                     url:       github.event.repository.html_url
                   }
-                }) }}"
+                }) }}'
