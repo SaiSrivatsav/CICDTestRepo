@@ -6,6 +6,7 @@ sap.ui.define([
     return Controller.extend("test.sampleapp.controller.View1", {
         onInit() {
             // First change in the code
+            // Remote debug test
         }
     });
 });
